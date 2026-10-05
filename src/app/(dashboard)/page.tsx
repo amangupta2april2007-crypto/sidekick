@@ -30,6 +30,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [justChecked, setJustChecked] = useState<string | null>(null);
+  const [coachMeta, setCoachMeta] = useState<{ provider: string; model: string } | null>(null);
   
   const toastTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -69,10 +70,13 @@ export default function Home() {
       const response = await fetch("/api/coach", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ note }) 
+        body: JSON.stringify({ note, plan }) 
       });
       const data = await response.json();
       setReply(data.reply || "Start with one small, repeatable change today.");
+      if (data.provider) {
+        setCoachMeta({ provider: data.provider, model: data.model || "Gemma" });
+      }
     } catch { 
       setReply("The coach is resting right now. Keep the plan gentle and consistent today."); 
     } finally { 
@@ -241,7 +245,39 @@ export default function Home() {
               placeholder="Or write a note for your sidekick..." 
               rows={3} 
             />
-            {reply && <p className="coach-reply">{reply}</p>}
+            {reply && (
+              <div style={{ marginTop: 12 }}>
+                {coachMeta && (
+                  <span
+                    className="tiny-pill"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginBottom: 8,
+                      fontSize: 11,
+                      padding: "4px 10px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: "50%",
+                        background:
+                          coachMeta.provider === "local-gemma"
+                            ? "var(--green)"
+                            : "#d97706",
+                      }}
+                    />
+                    {coachMeta.provider === "local-gemma"
+                      ? `Local ${coachMeta.model} Active`
+                      : "Gemma Coach"}
+                  </span>
+                )}
+                <p className="coach-reply">{reply}</p>
+              </div>
+            )}
             <button className="dark-button" onClick={askCoach} disabled={loading}>
               {loading ? (
                 <span className="loading-dots">

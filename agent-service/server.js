@@ -13,7 +13,18 @@ app.post("/coach", async (request, response) => {
   const note = typeof request.body?.note === "string" ? request.body.note : "Make this week feel easier.";
   const prompt = `You are Sidekick, an open-source Gemma wellness planning agent for a 56-year-old father. Create a kind, familiar, practical suggestion in under 120 words. Never diagnose or prescribe. Mention checking with a clinician for pain, medication, or conditions. User note: ${note}`;
   try {
-    const result = await fetch(`${ollama}/api/generate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model, prompt, stream: false }), signal: AbortSignal.timeout(20000) });
+    const result = await fetch(`${ollama}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        prompt,
+        stream: false,
+        keep_alive: "10m",
+        options: { num_ctx: 1024, num_predict: 48, temperature: 0.3 },
+      }),
+      signal: AbortSignal.timeout(45000),
+    });
     if (!result.ok) throw new Error(`Ollama returned ${result.status}`);
     const data = await result.json();
     return response.json({ reply: data.response || "Keep the next step small and kind.", provider: "gemma", model });
