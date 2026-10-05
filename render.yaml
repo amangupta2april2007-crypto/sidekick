@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: sidekick-gemma-agent
+    runtime: docker
+    dockerfilePath: ./agent-service/Dockerfile
+    dockerContext: ./agent-service
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: GEMMA_MODEL
+        value: gemma3:4b
+      - key: OLLAMA_URL
+        sync: false
